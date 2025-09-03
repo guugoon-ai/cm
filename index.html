@@ -1,16 +1,32 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>영상 안내</title>
-<style>
-  html,body { margin:0; height:100%; background:#000; }
-  video { position:fixed; inset:0; width:100vw; height:100vh; object-fit:cover; background:#000; display:block; }
-  .skip { position:fixed; right:16px; bottom:16px; padding:10px 14px;
-    background:rgba(0,0,0,.6); color:#fff; border-radius:999px; text-decoration:none;
-    font:500 14px/1.2 system-ui,-apple-system,"Segoe UI",Roboto; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>영상 안내</title>
+  <style>
+    html,body { margin:0; height:100%; background:#000; }
+    video {
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100vh;
+      object-fit:cover;
+      background:#000;
+      display:block;
+    }
+    .skip {
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      padding:10px 14px;
+      background:rgba(0,0,0,.6);
+      color:#fff;
+      border-radius:999px;
+      text-decoration:none;
+      font:500 14px/1.2 system-ui,-apple-system,"Segoe UI",Roboto;
+    }
+  </style>
 </head>
 <body>
   <video id="v" playsinline webkit-playsinline muted autoplay preload="auto">
@@ -20,29 +36,24 @@
 
   <a class="skip" href="https://www.sooperang.or.kr/indvz/main.do?hmpgId=FT00001">건너뛰기</a>
 
-<script>
-  const TARGET_URL = "https://www.sooperang.or.kr/indvz/main.do?hmpgId=FT00001";
-  const v = document.getElementById('v');
-  let timer = null;
+  <script>
+    const TARGET_URL = "https://www.sooperang.or.kr/indvz/main.do?hmpgId=FT00001";
+    const v = document.getElementById('v');
 
-  // 재생 가능해지면 그때 재생 + 폴백 타이머 시작
-  v.addEventListener('canplay', () => {
-    v.play().catch(()=>{ /* 자동재생 실패시 사용자가 터치하면 재생 */ });
-    timer = setTimeout(()=> location.href = TARGET_URL, 8000);
-  });
+    // 자동재생 시도
+    v.addEventListener('canplay', () => { v.play().catch(()=>{}); });
 
-  // 영상 끝나면 즉시 이동
-  v.addEventListener('ended', () => {
-    if (timer) clearTimeout(timer);
-    location.href = TARGET_URL;
-  });
+    // 영상이 끝났을 때 이동
+    v.addEventListener('ended', () => {
+      location.href = TARGET_URL;
+    });
 
-  // iOS 등에서 자동재생이 막힐 때 터치 한 번으로 재생
-  window.addEventListener('touchstart', ()=> v.play(), { once:true });
-  window.addEventListener('click', ()=> v.play(), { once:true });
+    // 자동재생이 막힐 때 사용자 터치/클릭으로 재생
+    window.addEventListener('touchstart', () => v.play(), { once:true });
+    window.addEventListener('click', () => v.play(), { once:true });
 
-  // 탭 전환 시 일시정지(선택)
-  document.addEventListener('visibilitychange', ()=> { if (document.hidden) v.pause(); });
-</script>
+    // 탭 전환 시 일시정지 (선택)
+    document.addEventListener('visibilitychange', () => { if (document.hidden) v.pause(); });
+  </script>
 </body>
 </html>

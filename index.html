@@ -7,25 +7,20 @@
   <style>
     html,body { margin:0; height:100%; background:#000; }
     video {
-      position:fixed;
-      inset:0;
-      width:100vw;
-      height:100vh;
-      object-fit:cover;
+      position:fixed; inset:0;
+      width:100vw; height:100vh;
+      object-fit:contain;           /* 기본: 레터박스(잘림 없음) */
+      object-position:center;
       background:#000;
       display:block;
     }
-    .skip {
-      position:fixed;
-      right:16px;
-      bottom:16px;
-      padding:10px 14px;
-      background:rgba(0,0,0,.6);
-      color:#fff;
-      border-radius:999px;
-      text-decoration:none;
+    .skip, .toggle {
+      position:fixed; bottom:16px; padding:10px 14px;
+      background:rgba(0,0,0,.6); color:#fff; border-radius:999px; text-decoration:none;
       font:500 14px/1.2 system-ui,-apple-system,"Segoe UI",Roboto;
     }
+    .skip { right:16px; }
+    .toggle { left:16px; }
   </style>
 </head>
 <body>
@@ -34,26 +29,38 @@
     브라우저에서 동영상을 재생할 수 없습니다.
   </video>
 
+  <!-- 버튼들 -->
+  <a class="toggle" href="#" id="btnToggle">화면 가득 채우기</a>
   <a class="skip" href="https://www.sooperang.or.kr/indvz/main.do?hmpgId=FT00001">건너뛰기</a>
 
   <script>
     const TARGET_URL = "https://www.sooperang.or.kr/indvz/main.do?hmpgId=FT00001";
     const v = document.getElementById('v');
+    const btnToggle = document.getElementById('btnToggle');
 
     // 자동재생 시도
     v.addEventListener('canplay', () => { v.play().catch(()=>{}); });
 
-    // 영상이 끝났을 때 이동
-    v.addEventListener('ended', () => {
-      location.href = TARGET_URL;
-    });
+    // 영상 끝나면 이동
+    v.addEventListener('ended', () => { location.href = TARGET_URL; });
 
-    // 자동재생이 막힐 때 사용자 터치/클릭으로 재생
+    // 자동재생 막힐 때 사용자 제스처 필요
     window.addEventListener('touchstart', () => v.play(), { once:true });
     window.addEventListener('click', () => v.play(), { once:true });
 
-    // 탭 전환 시 일시정지 (선택)
     document.addEventListener('visibilitychange', () => { if (document.hidden) v.pause(); });
+
+    // contain ↔ cover 전환
+    btnToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (v.style.objectFit === 'cover') {
+        v.style.objectFit = 'contain';
+        btnToggle.textContent = "화면 가득 채우기";
+      } else {
+        v.style.objectFit = 'cover';
+        btnToggle.textContent = "잘림 없이 보기";
+      }
+    });
   </script>
 </body>
 </html>

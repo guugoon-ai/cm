@@ -9,18 +9,22 @@
     video {
       position:fixed; inset:0;
       width:100vw; height:100vh;
-      object-fit:contain;           /* 기본: 레터박스(잘림 없음) */
+      object-fit:contain;           /* 잘림 방지 (버튼으로 cover 전환 가능하다면 이전 버전 사용) */
       object-position:center;
-      background:#000;
-      display:block;
+      background:#000; display:block;
     }
-    .skip, .toggle {
+    .skip, .unmute {
       position:fixed; bottom:16px; padding:10px 14px;
       background:rgba(0,0,0,.6); color:#fff; border-radius:999px; text-decoration:none;
-      font:500 14px/1.2 system-ui,-apple-system,"Segoe UI",Roboto;
+      font:500 14px/1.2 system-ui,-apple-system,"Segoe UI",Roboto; backdrop-filter: blur(6px);
     }
     .skip { right:16px; }
-    .toggle { left:16px; }
+    .unmute { left:16px; cursor:pointer; user-select:none; }
+    .hint {
+      position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+      color:#fff; font:600 16px/1.3 system-ui; background:rgba(0,0,0,.4);
+      padding:10px 14px; border-radius:12px; display:none;
+    }
   </style>
 </head>
 <body>
@@ -29,38 +33,50 @@
     브라우저에서 동영상을 재생할 수 없습니다.
   </video>
 
-  <!-- 버튼들 -->
-  <a class="toggle" href="#" id="btnToggle">화면 가득 채우기</a>
+  <div class="unmute" id="btnUnmute">🔊 소리 켜기</div>
   <a class="skip" href="https://www.sooperang.or.kr/indvz/main.do?hmpgId=FT00001">건너뛰기</a>
+  <div class="hint" id="hint">소리가 필요하면 화면을 한 번 터치하세요</div>
 
   <script>
     const TARGET_URL = "https://www.sooperang.or.kr/indvz/main.do?hmpgId=FT00001";
     const v = document.getElementById('v');
-    const btnToggle = document.getElementById('btnToggle');
+    const btnUnmute = document.getElementById('btnUnmute');
+    const hint = document.getElementById('hint');
 
-    // 자동재생 시도
+    // 무음 자동재생 시도
     v.addEventListener('canplay', () => { v.play().catch(()=>{}); });
 
-    // 영상 끝나면 이동
+    // 영상 종료 시 이동
     v.addEventListener('ended', () => { location.href = TARGET_URL; });
 
-    // 자동재생 막힐 때 사용자 제스처 필요
-    window.addEventListener('touchstart', () => v.play(), { once:true });
-    window.addEventListener('click', () => v.play(), { once:true });
+    // iOS 등에서 자동재생은 muted만 허용 → 소리 켜기(사용자 제스처 필요)
+    function enableSound() {
+      // 사용자 제스처로 호출되어야 함
+      v.muted = false;        // 소리 켬
+      v.volume = 1.0;
+      // 일부 브라우저에서 즉시 갱신을 강제
+      try { v.currentTime = Math.max(0, v.currentTime); } catch(_) {}
+      v.play().catch(()=>{});
+      btnUnmute.style.display = 'none';
+      hint.style.display = 'none';
+      // 이후 추가 터치 이벤트는 제거 가능(선택)
+      window.removeEventListener('touchstart', enableSoundOnce);
+      window.removeEventListener('click', enableSoundOnce);
+    }
+    function enableSoundOnce() { enableSound(); }
 
+    // 버튼으로 소리 켜기
+    btnUnmute.addEventListener('click', enableSound);
+
+    // 화면 아무 곳이나 첫 터치/클릭으로도 소리 켜기
+    window.addEventListener('touchstart', enableSoundOnce, { once:true });
+    window.addEventListener('click', enableSoundOnce, { once:true });
+
+    // 자동재생이 막혔거나 무음이라면 힌트 표시
+    setTimeout(() => { if (v.muted) hint.style.display = 'block'; }, 800);
+
+    // 탭 전환 시 일시정지(선택)
     document.addEventListener('visibilitychange', () => { if (document.hidden) v.pause(); });
-
-    // contain ↔ cover 전환
-    btnToggle.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (v.style.objectFit === 'cover') {
-        v.style.objectFit = 'contain';
-        btnToggle.textContent = "화면 가득 채우기";
-      } else {
-        v.style.objectFit = 'cover';
-        btnToggle.textContent = "잘림 없이 보기";
-      }
-    });
   </script>
 </body>
 </html>
